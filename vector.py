@@ -64,11 +64,9 @@ class Vector(object):
         """ Return the representation of the Vector
 
         >>> Vector([1,2,3])
-        Vector(1, 2, 3)
+        Vector([1, 2, 3])
         """
-        return 'Vector' + '('\
-                + str(reduce(lambda x, y: str(x) + ', ' + str(y), self._elements))\
-                + ')'
+        return 'Vector(' + str(self) + ')'
 
     def __str__(self):
         """ Return the string of the Vector
@@ -86,7 +84,7 @@ class Vector(object):
         >>> v1 = Vector([1, 2, 3, 4, 5])
         >>> v2 = Vector([0.1, 0.2, 0.3, 0.4, 0.5])
         >>> v1 + v2
-        Vector(1.1, 2.2, 3.3, 4.4, 5.5)
+        Vector([1.1, 2.2, 3.3, 4.4, 5.5])
 
         Args:
             other: The other vector
@@ -106,7 +104,7 @@ class Vector(object):
         >>> v2 = Vector([0.1, 0.2, 0.3, 0.4, 0.5])
         >>> v1 += v2
         >>> v1
-        Vector(1.1, 2.2, 3.3, 4.4, 5.5)
+        Vector([1.1, 2.2, 3.3, 4.4, 5.5])
 
         Args:
             other: The other vector
@@ -119,7 +117,7 @@ class Vector(object):
         >>> v1 = Vector([1, 2, 3, 4, 5])
         >>> v2 = Vector([0.1, 0.2, 0.3, 0.4, 0.5])
         >>> v1 - v2
-        Vector(0.9, 1.8, 2.7, 3.6, 4.5)
+        Vector([0.9, 1.8, 2.7, 3.6, 4.5])
 
         Args:
             other: The other vector
@@ -138,7 +136,7 @@ class Vector(object):
         >>> v1 = Vector([1, 2, 3, 4, 5])
         >>> v2 = Vector([0.1, 0.2, 0.3, 0.4, 0.5])
         >>> v1 - v2
-        Vector(0.9, 1.8, 2.7, 3.6, 4.5)
+        Vector([0.9, 1.8, 2.7, 3.6, 4.5])
 
         Args:
             other: The other vector
@@ -202,7 +200,7 @@ class Vector(object):
         >>> Vector([1,2]) * (Vector([2, 3]))
         8
         >>> Vector([1, 2]) * 2
-        Vector(2, 4)
+        Vector([2, 4])
         """
         if hasattr(other, '__iter__'):
             return reduce(lambda x, y: x+y, 
@@ -210,12 +208,12 @@ class Vector(object):
         else:
             return Vector(map(lambda x: x*other, self))
 
-    def __imull__(self, other):
+    def __imul__(self, other):
         """
         >>> v1 = Vector([1, 2])
         >>> v1 *= 2
         >>> v1
-        Vector(2, 4)
+        Vector([2, 4])
         """
         if not hasattr(other, '__iter__'):
             self.copy(self * other)
