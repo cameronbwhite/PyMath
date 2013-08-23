@@ -202,11 +202,11 @@ class Vector(object):
         >>> Vector([1, 2]) * 2
         Vector([2, 4])
         """
-        if hasattr(other, '__iter__'):
+        if not hasattr(other, '__iter__'):
+            return Vector(map(lambda x: x*other, self))
+        else:
             return reduce(lambda x, y: x+y, 
                           map(lambda x, y: x*y, self, other))
-        else:
-            return Vector(map(lambda x: x*other, self))
 
     def __imul__(self, other):
         """
