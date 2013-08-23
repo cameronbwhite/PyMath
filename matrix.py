@@ -31,11 +31,15 @@ from vector import Vector, VectorLengthError
 from functools import reduce
 
 class Matrix(object):
+    """ Mathematical Matrix
+
+        The Matrix implements a row-matrix
+    """
+
     def __init__(self, elements):
         """ Construct a Matrix
 
-        Matrix implements a row matrix
-        elements must be a list of list where each internal
+        Elements must be a list of list where each internal
         list must be the same length.
 
         >>> m1 = Matrix([[1.1, 1.2],\
@@ -77,8 +81,7 @@ class Matrix(object):
          [3.1, 3.2]]
 
         """
-        return '[' + reduce(lambda x, y: str(x) + ',\n ' + str(Vector(y)),
-            self._elements) + ']'
+        return '['+reduce(lambda x, y: str(x)+',\n '+str(y), self)+']'
 
     def __repr__(self):
         """ Return the representation of the Matrix
@@ -92,9 +95,9 @@ class Matrix(object):
         """
         prefix = 'Matrix(['
         indent = ' ' * len(prefix)
-        return 'Matrix([' +\
-            reduce(lambda x, y: str(x) + ',\n' + indent + str(Vector(y)),
-            self._elements) + '])'
+        return 'Matrix(['+\
+            reduce(lambda x, y: str(x)+',\n'+indent+str(y),
+            self)+'])'
 
     def __add__(self, other):
         """ Add this matrix to the other matrix in a new matrix
@@ -105,8 +108,7 @@ class Matrix(object):
         Matrix([[11.2, 11.4],
                 [22.2, 22.4]])
         """
-        return Matrix(map(lambda x, y: Vector(x) + Vector(y), 
-                          self._elements, other._elements))
+        return Matrix(map(lambda x, y: x + y, self, other))
 
     def __iadd__(self, other):
         """ Add this matrix to the other in place
@@ -129,8 +131,7 @@ class Matrix(object):
         Matrix([[9.0, 9.0],
                 [18.0, 18.0]])
         """
-        return Matrix(map(lambda x, y: Vector(x) - Vector(y), 
-                          self._elements, other._elements))
+        return Matrix(map(lambda x, y: x - y, self, other))
 
     def __isub__(self, other):
         """ Substract the other vector from this vector inplace
@@ -145,24 +146,71 @@ class Matrix(object):
         return self.copy(self - other)
 
     def __mul__(self, other):
-        if hasattr(other, '__iter__'):
-            pass    # TODO
-        else:
-            return Matrix(map(lambda x: Vector(x) * other, 
-                              self._elements))
+        """ Multiply this Matrix by a scalar, Matrix, or Vector
+
+        Scalar multiplication:
+        >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> m1 * 2
+        Matrix([[2.2, 2.4],
+                [4.2, 4.4]])
+        
+        Vector multiplication:
+        >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> v1 = Vector([3, 4])
+        >>> m1 * v1
+        Vector([8.1, 15.1])
+
+        Matrix multiplication:
+        >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> m2 = Matrix([[3.1, 3.2], [4.1, 4.2]])
+        >>> m1 * m2
+        Matrix([[8.33, 8.56],
+                [15.53, 15.96]])
+        """
+        if not hasattr(other, '__iter__'):
+            return Matrix(map(lambda x: x * other, self))
+
+        elif isinstance(other, Matrix):
+            try:
+                other = other.transpose()
+                elements = []
+                for vector in self:
+                    elements.append(map(lambda x: x * vector, other))
+                return Matrix(elements)
+            except TypeError:
+                raise MatrixSizeError
+
+        elif isinstance(other, Vector):
+            return Vector(map(lambda x: x * other, self))
 
     def __imul__(self, other):
+        """ Multiply this Matrix by a scalar inplace
+
+        Scalar multiplication:
+        >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> m1 *= 2
+        >>> m1
+        Matrix([[2.2, 2.4],
+                [4.2, 4.4]])
+        """
         if not hasattr(other, '__iter__'):
             self.copy(self * other)
         return self
 
     def __iter__(self):
-        for row in self._rowVectors:
-            for element in row:
-                yield element
+        """ Iterate over the Vectors in the Matrix
+        >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> for vector in m1:
+        ...    vector
+        Vector([1.1, 1.2])
+        Vector([2.1, 2.2])
+
+        """
+        for row_vector in self._elements:
+            yield Vector(row_vector)
 
     def __getitem__(self, index):
-        """ Get an row Vector at the index
+        """ Get a row Vector at the index
 
         >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
         >>> m1[0]
@@ -220,7 +268,25 @@ class Matrix(object):
         return len(self._elements[0])
 
     def transpose(self):
-        pass    # TODO
+        """ Transpose the matrix
+
+        >>> m1 = Matrix([[1.1, 1.2, 1.3], [2.1, 2.2, 3.3]])
+        >>> m1.transpose()
+        Matrix([[1.1, 2.1],
+                [1.2, 2.2],
+                [1.3, 3.3]])
+        """
+        new = Matrix([[0]*self.nRows() for i in range(self.nColumns())])
+        for i in range(self.nRows()):
+            for j in range(self.nColumns()):
+                new[j][i] = self[i][j]
+        return new
+
+class MatrixSizeError(Exception):
+    def __init__(self, value):
+        self.parameter = value
+    def __str__(self):
+        return repr(self.parameter)
 
 if __name__ == "__main__":
     import doctest
