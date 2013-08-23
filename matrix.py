@@ -1,108 +1,201 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from vector import ColumnVector, RowVector, VectorLengthError
+from vector import Vector, VectorLengthError
+from functools import reduce
 
 class Matrix(object):
-    def __init__(self, vectors=None, nRows=None, nColumns=None):
-        if vectors is not None:
-            vector_length = len(vectors[0])
-            vector_type = type(vectors[0]) 
-            if vector_type is not RowVector \
-               and vector_type is not ColumnVector \
-               and vector_type is not list \
-               and vector_type is not tuple: 
-                raise TypeError
-            for vector in vectors:
-                if type(vector) != vector_type:
-                    raise TypeError
-                if len(vector) != vector_length:
-                    raise VectorLengthError
-            if vector_type is RowVector:
-                self._rowVectors = vectors
-            elif vector_type is ColumnVector:
-                self._rowVectors = self._changeVectorType(vectors, RowVector)
-            else:
-                self._rowVectors = []
-                for vector in vectors:
-                    self._rowVectors.append(RowVector(vector))
-        elif nRows is not int and nColumns is not int:
-                self._rowVectors = [RowVector([0]*nColumns)]*nRows
+    def __init__(self, elements):
+        """ Construct a Matrix
+
+        Matrix implements a row matrix
+        elements must be a list of list where each internal
+        list must be the same length.
+
+        >>> m1 = Matrix([[1.1, 1.2],\
+                         [2.1, 2.2],\
+                         [3.1, 3.2]])
+
+        Args:
+            elements: list of list
+        """
+        if isinstance(elements, Matrix):
+            self._elements = elements._elements
+
         else:
-            raise TypeError
+            if not isinstance(elements, list):
+                raise TypeError
+
+            length = len(elements[0])
+            for vector in elements:
+                if len(vector) != length:
+                    raise VectorLengthError
+                if isinstance(vector, Vector):
+                    vector = vector._elements
+                if not isinstance(vector, list):
+                    raise TypeError
+
+            self._elements = elements
+
     def __str__(self):
-        string = ''
-        for index, row in enumerate(self._rowVectors):
-            for element in row:
-                string += str(element) + ' '
-            if index < len(self._rowVectors) - 1:
-                string += '\n'        
-        return string
+        """ Return the string representation of the Matrix
+
+        >>> m1 = Matrix([[1.1, 1.2],\
+                         [2.1, 2.2],\
+                         [3.1, 3.2]])
+        >>> str(m1)
+        '[[1.1, 1.2],\\n [2.1, 2.2],\\n [3.1, 3.2]]'
+        >>> print(m1)
+        [[1.1, 1.2],
+         [2.1, 2.2],
+         [3.1, 3.2]]
+
+        """
+        return '[' + reduce(lambda x, y: str(x) + ',\n ' + str(Vector(y)),
+            self._elements) + ']'
+
     def __repr__(self):
-        string = 'Matrix('
-        indent = ' '*len(string)
-        for index, row in enumerate(self._rowVectors):
-            if index > 0:
-                string += indent
-            for i, element in enumerate(row):
-                string += str(element)
-                if i < len(row) - 1:
-                    string += ' '
-            if index < len(self._rowVectors) - 1:
-                string += '\n'        
-            else:
-                string += ')'
-        return string
-    def __iadd__(self, other):
-        for i in range(self.nRows()):
-            self._rowVectors[i] += other._rowVectors[i]
-        return self
+        """ Return the representation of the Matrix
+
+        >>> Matrix([[1.1, 1.2],\
+                    [2.1, 2.2],\
+                    [3.1, 3.2]])
+        Matrix([[1.1, 1.2],
+                [2.1, 2.2],
+                [3.1, 3.2]])
+        """
+        prefix = 'Matrix(['
+        indent = ' ' * len(prefix)
+        return 'Matrix([' +\
+            reduce(lambda x, y: str(x) + ',\n' + indent + str(Vector(y)),
+            self._elements) + '])'
+
     def __add__(self, other):
-        new_matrix = Matrix(self.nColumns(),self.nRows())
-        for i in range(self.nRows()):
-            new_matrix._rowVectors[i] = self._rowVectors[i] + other._rowVectors[i]
-        return new_matrix
-    def __isub__(self, other):
-        for i in range(self.nRows()):
-            self._rowVectors[i] -= other._rowVectors[i]
-        return self
+        """ Add this matrix to the other matrix in a new matrix
+
+        >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> m2 = Matrix([[10.1, 10.2], [20.1, 20.2]])
+        >>> m1 + m2
+        Matrix([[11.2, 11.4],
+                [22.2, 22.4]])
+        """
+        return Matrix(map(lambda x, y: Vector(x) + Vector(y), 
+                          self._elements, other._elements))
+
+    def __iadd__(self, other):
+        """ Add this matrix to the other in place
+
+        >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> m2 = Matrix([[10.1, 10.2], [20.1, 20.2]])
+        >>> m1 += m2
+        >>> m1
+        Matrix([[11.2, 11.4],
+                [22.2, 22.4]])
+        """
+        return self.copy(self + other)
+
     def __sub__(self, other):
-        new_matrix = Matrix(self.nColumns(),self.nRows())
-        for i in range(self.nRows()):
-            new_matrix._rowVectors[i] = self._rowVectors[i] - other._rowVectors[i]
-        return new_matrix
+        """ Substract the other vector from this vector 
+
+        >>> m1 = Matrix([[10.1, 10.2], [20.1, 20.2]])
+        >>> m2 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> m1 - m2
+        Matrix([[9.0, 9.0],
+                [18.0, 18.0]])
+        """
+        return Matrix(map(lambda x, y: Vector(x) - Vector(y), 
+                          self._elements, other._elements))
+
+    def __isub__(self, other):
+        """ Substract the other vector from this vector inplace
+
+        >>> m1 = Matrix([[10.1, 10.2], [20.1, 20.2]])
+        >>> m2 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> m1 -= m2
+        >>> m1
+        Matrix([[9.0, 9.0],
+                [18.0, 18.0]])
+        """
+        return self.copy(self - other)
+
+    def __mul__(self, other):
+        if hasattr(other, '__iter__'):
+            pass    # TODO
+        else:
+            return Matrix(map(lambda x: Vector(x) * other, 
+                              self._elements))
+
     def __imul__(self, other):
-        new_matrix = Matrix(self.nColumns(),self.nRows())
+        if not hasattr(other, '__iter__'):
+            self.copy(self * other)
+        return self
+
     def __iter__(self):
         for row in self._rowVectors:
             for element in row:
                 yield element
-    def __getitem__(self, key):
-        return self._rowVectors[key]
-    def nRows(self):
-        return len(self._rowVectors)
-    def nColumns(self):
-        return len(self._rowVectors[0])
-    def _changeVectorType(self, vectors, newType):
-        if newType is not RowVector and newType is not ColumnVector:
+
+    def __getitem__(self, index):
+        """ Get an row Vector at the index
+
+        >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> m1[0]
+        Vector([1.1, 1.2])
+        """
+        return Vector(self._elements[index])
+
+    def __setitem__(self, index, value):
+        """ Set the row Vector at the index
+
+        >>> m1 = Matrix([[1.1, 1.2], [2.1, 2.2]])
+        >>> m1[0] = Vector([10, 20])
+        >>> m1[0]
+        Vector([10, 20])
+        >>> m1[1] = [30, 40]
+        >>> m1[1]
+        Vector([30, 40])
+        """
+        if len(value) != self.nColumns():
+            raise VectorLengthError
+        if isinstance(value, Vector):
+            self._elements[index] = value._elements
+        elif isinstance(value, list):
+            self._elements[index] = value
+        else:
             raise TypeError
-        new_vectors = []
-        j = 0
-        for i in range(len(vectors)):
-            new_vector = []
-            for vector in vectors:
-                new_vector.append(vector[j])
-            j += 1
-            new_vectors.append(newType(new_vector))
-        return new_vectors
 
-r1 = RowVector((1, 2, 3))
-r2 = RowVector((2, 3, 4))
-r3 = RowVector((3, 4, 5))
+    def copy(self, other):
+        """ Copy the elements of the other matrix
 
-c1 = ColumnVector((1, 2, 3))
-c2 = ColumnVector((2, 3, 4))
-c3 = ColumnVector((3, 4, 5))
+        >>> m1 = Matrix([[1, 2, 3]])
+        >>> m2 = Matrix([[]])
+        >>> m2 = Matrix(m1)
+        >>> m2._elements is m1._elements
+        True
+        """
+        assert isinstance(other, Matrix)
+        self._elements = other._elements
+        return self
 
-m1 = Matrix([r1,r2,r3])
-m2 = Matrix([c1,c2,c3])
+    def nRows(self):
+        """ Return the number of rows in the matrix
+
+        >>> Matrix([[1.1, 1.2, 1.3], [2.1, 2.2, 3.3]]).nRows()
+        2
+        """
+        return len(self._elements)
+
+    def nColumns(self):
+        """ Return the number of columns in the matrix
+
+        >>> Matrix([[1.1, 1.2, 1.3], [2.1, 2.2, 3.3]]).nColumns()
+        3
+        """
+        return len(self._elements[0])
+
+    def transpose(self):
+        pass    # TODO
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
