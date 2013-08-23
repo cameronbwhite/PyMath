@@ -185,7 +185,7 @@ class Vector(object):
         >>> abs(Vector([1, 2, 3]))
         3.7416573867739413
         """
-        return sqrt(self.dot(self))
+        return sqrt(self * self)
 
     def copy(self, other):
         """ Copy the elements of the other vector
@@ -199,13 +199,30 @@ class Vector(object):
         self._elements = other._elements
         return self
 
-    def dot(self, other):
+    def __mul__(self, other):
         """ Return the dot product of the two vectors
 
-        >>> Vector([1,2]).dot(Vector([2, 3]))
+        >>> Vector([1,2]) * (Vector([2, 3]))
         8
+        >>> Vector([1, 2]) * 2
+        Vector(2, 4)
         """
-        return reduce(lambda x, y: x+y, map(lambda x, y: x*y, self, other))
+        if hasattr(other, '__iter__'):
+            return reduce(lambda x, y: x+y, 
+                          map(lambda x, y: x*y, self, other))
+        else:
+            return Vector(map(lambda x: x*other, self))
+
+    def __imull__(self, other):
+        """
+        >>> v1 = Vector([1, 2])
+        >>> v1 *= 2
+        >>> v1
+        Vector(2, 4)
+        """
+        if not hasattr(other, '__iter__'):
+            self.copy(self * other)
+        return self
 
 class VectorLengthError(Exception):
     def __init__(self, value):
