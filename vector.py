@@ -43,12 +43,9 @@ class Vector(object):
         possible, this will probably result in copying of data.
         Also if value is a Vector then the constructor copies.
 
-        >>> Vector([1, 2, 3, 4, 5])
-        Vector(1, 2, 3, 4, 5)
-        >>> Vector([0.1, 0.2, 0.3, 0.4, 0.5])
-        Vector(0.1, 0.2, 0.3, 0.4, 0.5)
-        >>> Vector(5)
-        Vector(0, 0, 0, 0, 0)
+        >>> v1 = Vector([1, 2, 3, 4, 5])
+        >>> v2 = Vector([0.1, 0.2, 0.3, 0.4, 0.5])
+        >>> v3 = Vector(5)
 
         Args:
             value: list, number, or something that can be converted 
